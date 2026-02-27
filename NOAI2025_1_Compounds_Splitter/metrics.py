@@ -68,12 +68,38 @@ def evaluate_f1(original_file, predicted_file):
     print(f"Average F1: {f1_avg * 100:.2f}%")
     return f1_avg
 
+# Function to evaluate accuracy
+def evaluate_accuracy(original_file, predicted_file):
+    """
+    Compares the original JSON file with the predicted JSON file and calculates accuracy.
+
+    :param original_file: Path to original JSON file
+    :param predicted_file: Path to predicted JSON file
+    """
+    with open(original_file, "r", encoding="utf-8") as f:
+        original_data = json.load(f)
+
+    with open(predicted_file, "r", encoding="utf-8") as f:
+        predicted_data = json.load(f)
+
+    correct = 0
+    total = len(original_data)
+
+    for word, original_labels in original_data.items():
+        predicted_labels = predicted_data.get(word, [])
+        if predicted_labels == original_labels:
+            correct += 1
+
+    accuracy = correct / total
+    print(f"Accuracy: {accuracy * 100:.2f}%")
+    return accuracy
+
 if __name__ == '__main__':
     # 计算验证集的 F1 均值
-    f1_val = evaluate_f1('valans.json', 'submissionval.json')
+    f1_val = evaluate_f1('datasets/valans.json', 'datasets/submissionval.json')
     print(f"Validation F1: {f1_val:.4f}")
     # 计算测试集的 F1 均值
-    f1_test = evaluate_f1('testans.json', 'submissiontest.json')
+    f1_test = evaluate_f1('datasets/testans.json', 'datasets/submissiontest.json')
     print(f"Test F1: {f1_test:.4f}")
     
     score = {
@@ -91,9 +117,9 @@ if __name__ == '__main__':
 
 
 if __name__ == '__main__':
-    scoreval = evaluate_accuracy('valans.json', 'submissionval.json')
+    scoreval = evaluate_accuracy('datasets/valans.json', 'datasets/submissionval.json')
     print(scoreval)
-    scoretest =  evaluate_accuracy('testans.json', 'submissiontest.json')
+    scoretest =  evaluate_accuracy('datasets/testans.json', 'datasets/submissiontest.json')
     print(scoretest)
     score = {
         "public_a": scoreval,

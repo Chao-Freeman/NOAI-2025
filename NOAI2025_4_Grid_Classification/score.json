@@ -1,0 +1,8 @@
+{
+  "status": true,
+  "score": {
+    "public_a": 0.83,
+    "private_b": 0.7325
+  },
+  "msg": "Accuracy scoring completed."
+}

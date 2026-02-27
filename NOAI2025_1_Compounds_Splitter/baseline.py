@@ -57,11 +57,11 @@ def collate_fn(batch):
 
 # Define the BiLSTM Model
 class BiLSTMSegmentation(nn.Module):
-    def __init__(self, vocab_size, embedding_dim=64, hidden_dim=128, num_layers=2):
+    def __init__(self, vocab_size, hidden_dim=128, num_layers=2):
         super(BiLSTMSegmentation, self).__init__()
-        self.embedding = nn.Embedding(vocab_size + 1, embedding_dim, padding_idx=0)
+        self.vocab_size = vocab_size
         self.lstm = nn.LSTM(
-            embedding_dim,
+            vocab_size + 1,  # input_size is vocab_size + 1 (for one-hot encoding)
             hidden_dim,
             num_layers=num_layers,
             bidirectional=True,
@@ -72,7 +72,8 @@ class BiLSTMSegmentation(nn.Module):
 
     def forward(self, x):
         # x: (batch_size, seq_length)
-        x = self.embedding(x)  # (batch_size, seq_length, embedding_dim)
+        # Convert input to one-hot encoding
+        x = nn.functional.one_hot(x, num_classes=self.vocab_size + 1).float()  # (batch_size, seq_length, vocab_size + 1)
         
         # Pass through BiLSTM
         lstm_out, _ = self.lstm(x)  # (batch_size, seq_length, hidden_dim * 2)
@@ -104,9 +105,10 @@ def train():
         model.train()
         epoch_loss = 0
         for inputs, targets, lengths in dataloader:
+            inputs = inputs.to(device)
             targets = targets.to(device)
             optimizer.zero_grad()
-            outputs = model(inputs.to(device))
+            outputs = model(inputs)
             
             # Mask padding positions
             mask = torch.arange(inputs.shape[1])[None, :] < torch.tensor(lengths)[:, None]
@@ -148,7 +150,6 @@ def predict_and_save(model, input_file, output_file, char2idx, device="cpu"):
             # Convert word to indices
             indices = [char2idx.get(char, 0) for char in word]
             input_tensor = torch.tensor(indices, dtype=torch.long).unsqueeze(0).to(device)
-            
             # Get model outputs
             outputs = model(input_tensor)[0].cpu().numpy()
             
@@ -172,6 +173,7 @@ if __name__ == "__main__":
     input_file = "./val.json"
     output_file = "./submissionval.json"
     predict_and_save(model, input_file, output_file, char2idx, device)
+     # Predict and save results
     input_file = "./test.json"
     output_file = "./submissiontest.json"
     predict_and_save(model, input_file, output_file, char2idx, device)

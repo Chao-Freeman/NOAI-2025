@@ -1,3 +1,4 @@
+# 注意：train_manual.csv是refresult数据，选手可根据训练数据自行构建此文件
 import os
 import zipfile
 import numpy as np
@@ -5,6 +6,7 @@ import pandas as pd
 from PIL import Image
 import cv2
 import torch
+import torch_musa
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from torchvision.models import resnet34
@@ -486,7 +488,7 @@ def main(method:str = "CNN"):
         val_loader = DataLoader(val_ds, batch_size=32, shuffle=False, num_workers=2)
         test_loader = DataLoader(test_ds, batch_size=32, shuffle=False, num_workers=2)
         
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        device = torch.device("musa" if torch.musa.is_available() else "cpu")
         model = build_resnet34().to(device)
 
         criterion = nn.CrossEntropyLoss()
@@ -524,6 +526,6 @@ def main(method:str = "CNN"):
     os.remove("submissionB.csv")
 
 if __name__ == "__main__":
-    method = "CNN" 
+    method = "CNN"
     # method = "canny"
     main(method)
